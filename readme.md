@@ -1,3 +1,5 @@
+ This repository contains the supplementary information for the paper Garduno et. al. (2022) Photochemical modeling of the climate-redox evolution of the Great Oxidation Event: from a Snowball Earth to a Hot-Moist Greenhouse. EPSL.
+
 # Reproduce our results
 
 ## Install PhotochemPy
@@ -65,7 +67,7 @@ python make_plots.py
 
 # Boundary Conditions
 
-The folder `boundary_conditions/` contains the species boundary conditions machine-readable files that we use in the `species.dat` files. We keep these boundary conditions constant for all species across all runs, except for methane, oxygen, and carbon monoxide. We specify each run's surface flux boundary conditions in CSV files for methane, oxygen, and carbon monoxide. The fluxes units are photochemical units ($1pu = 1 molecule/cm^{2}/s$).
+The folder `boundary_conditions/` contains the species boundary conditions machine-readable files that we use in the `species.dat` files. We keep these boundary conditions constant for all species across all runs, except for methane, oxygen, and carbon monoxide. We specify each run's surface flux boundary conditions in CSV files for methane, oxygen, and carbon monoxide. The fluxes units are $molecules/cm^{2}/s$.
 
 # Reaction rates
 
