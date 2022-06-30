@@ -1,0 +1,4 @@
+matplotlib=3.5.1=pypi_0
+numpy=1.22.3=pypi_0
+pandas=1.4.1=pypi_0
+seaborn=0.11.2=pypi_0
