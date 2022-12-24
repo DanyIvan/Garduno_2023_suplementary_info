@@ -52,7 +52,8 @@ def boundary_conditions(scenario='increase_O2'):
     lineplot(datarh6, 'press', 'alt', 'temp_lb', lw=0.7)
     axes[2].set_ylabel('Altitude [Km]', fontsize=8)
     axes[2].set_xlabel('Pressure [Bar]', fontsize=8)
-    axes[2].text(0.1, 0.9, 'c)', transform=axes[2].transAxes, size=8)
+    axes[2].text(0.9, 0.9, 'c)', transform=axes[2].transAxes, size=8)
+    plt.xscale('log')
     # relative humidity
     plt.sca(axes[3])
     for rh in data.relh_lb.unique():
