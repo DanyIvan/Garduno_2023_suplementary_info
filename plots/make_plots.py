@@ -3,9 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib as mpl
-import matplotlib.gridspec as gridspec
-import math as m
-from plot_helpers import add_colorbar, scatterplot, lineplot, add_horizontal_legend
+from plot_helpers import add_colorbar, scatterplot, lineplot,  print_name,\
+    filter_data, format_minor_ticks, sci_notation, format_minor_ticks,\
+    subplots_centered, add_horizontal_legend
 
 # size of figure to fit in a4 page size
 a4_x, a4_y = (8.27, 11.69)
@@ -17,85 +17,16 @@ mpl.rc('ytick', labelsize=6)
 flux_labels = {'increase_O2': r'Surface $O_2$ flux [$/cm^2/s$]',
     'decrease_CO': r'Surface $CO$ flux [$/cm^2/s$]'}
 
-def filter_data(data, rh=0.6, scenario='increase_O2'):
-    '''Filters surface O2 and CO flux range, considering only converged solutions'''
-    data = data[data.converged]
-    if scenario == 'increase_O2':
-        data = data[data.O2_flux_lb > 1e11]
-        data = data[data.O2_flux_lb < 1.1e12]
-    else:
-        data = data[data.CO_flux_lb > 0.5e11]
-        data = data[data.CO_flux_lb < 6e11]
-        pass
-    # if rh == 'all' keep all relative humidities
-    if rh != 'all':
-        data = data[data.relh_lb == rh]
-    return data
-
-def format_minor_ticks(x, pos=None):
-    '''Formater for minor ticks in log plots'''
-    return str(x)[0]
-
-def sci_notation(num, decimal_digits=2):
-    '''Converts a number to a string in scientific notation'''
-    exponent = int(m.floor(m.log10(abs(num))))
-    coeff = round(num / float(10**exponent), decimal_digits)
-    precision = decimal_digits
-    return r"${}\times 10^{{{}}}$".format(coeff, exponent)
-
-def print_name(func):
-    '''Decorator to print name of runing function'''
-    def inner(*args, **kwargs):
-        print('Running ', func.__name__)
-        result = func(*args, **kwargs)
-        return result
-    return inner
-
-
-def subplots_centered(nrows, ncols, figsize, nfigs):
-    """
-    Source: https://stackoverflow.com/questions/53361373/center-the-third-
-        subplot-in-the-middle-of-second-row-python
-    Modification of matplotlib plt.subplots(),
-    useful when some subplots are empty.
-    
-    It returns a grid where the plots
-    in the **last** row are centered.
-    
-    Inputs
-    ------
-        nrows, ncols, figsize: same as plt.subplots()
-        nfigs: real number of figures
-    """
-    assert nfigs < nrows * ncols, "No empty subplots, use normal plt.subplots() instead"
-    
-    fig = plt.figure(figsize=figsize)
-    axs = []
-    
-    m = nfigs % ncols
-    m = range(1, ncols+1)[-m]  # subdivision of columns
-    gs = gridspec.GridSpec(nrows, m*ncols)
-
-    for i in range(0, nfigs):
-        row = i // ncols
-        col = i % ncols
-
-        if row == nrows-1: # center only last row
-            off = int(m * (ncols - nfigs % ncols) / 2)
-        else:
-            off = 0
-
-        ax = plt.subplot(gs[row, m*col + off : m*(col+1) + off])
-        axs.append(ax)
-        
-    return fig, axs
-
 @print_name
 def boundary_conditions(scenario='increase_O2'):
     '''Plots boundary conditions for temperature, eddy diffusivity, pressure and
     relative humidity in the atmosphere ''' 
     if scenario == 'increase_O2':
         bcs_data = 'model_output/increase_O2_flux_case=0.3_bcs.csv'
+    elif scenario == 'colder_strat':
+        bcs_data = 'model_output/increase_O2_flux_case=0.3_colder_stratosphere_1_bcs.csv'
+    elif scenario == 'eddy_sensitivity':
+        bcs_data = 'model_output/increase_O2_flux_case=0.3_eddy_sensitivity_bcs.csv'
     else:
         bcs_data = 'model_output/decrease_CO_flux_case=0.3_bcs.csv'
     data = pd.read_csv(bcs_data, compression='gzip')
@@ -146,7 +77,12 @@ def boundary_conditions(scenario='increase_O2'):
     plt.subplots_adjust(wspace=0.4, hspace=0.35)
     add_colorbar(fig, axes, temps, 'Surface Temperature [K]', pad=0.08,
         ticks=temps)
-    fig.savefig('atm_bcs.pdf', bbox_inches='tight')
+    if scenario == 'increase_O2':
+        fig.savefig('atm_bcs.pdf', bbox_inches='tight')
+    elif scenario == 'colder_strat':
+        fig.savefig('atm_bcs_cold_strat.pdf', bbox_inches='tight')
+    elif scenario == 'eddy_sensitivity':
+        fig.savefig('atm_bcs_eddy_sensitivity.pdf', bbox_inches='tight')
     plt.close('all')
 
 @print_name
@@ -163,31 +99,59 @@ def gregory_case1_vs_this_study():
 
     # make handles for legend
     colors = [palette[0], palette[-1]]
-    shapes = ["o", "^", "*", "D"]
-    f = lambda m,c: plt.plot([],[],marker=m, color=c, ls="none")[0]
-    handles = [f("s","w")]
-    handles += [f("s", colors[i]) for i in range(2)]
-    handles += [f("s","w")]
-    handles += [f(shapes[i], "k") for i in range(4)]
+    shapes = ["o", "^", "*"]
+    
+    def make_handles(m,c, ls='none', alpha=None):
+        return plt.plot([],[],marker=m, color=c, ls=ls, alpha=alpha)[0]
+    handles = [make_handles("s","w", alpha=0)] + [make_handles("s", colors[i]) for i in
+        range(2)] + [make_handles("s","w", alpha=0)] + [make_handles(shapes[i], "k") 
+        for i in range(3)]
 
-    labels =["Data","Gregory et. al. (2021)", "This study",
+    labels =["Simulations","Gregory et. al. (2021)", "This study",
         r"$CH_4$:$O_2$ flux ratio", "0.094", "0.3", "0.45"]
 
     cases = [0.094, 0.3, 0.45]
     for sp in species:
         fig = plt.figure(figsize=(a4_x*0.6, a4_y*0.25))
+        if sp == 'O2':
+            plt.axhline(0.21, color='k', linestyle='--', lw=0.7)
         for idx_color, data_source in enumerate(data.data_source.unique()):
             for idx_shape, case in enumerate(cases):
                 d = data[(data.data_source == data_source) & (data.case == case)]
                 plt.scatter(d.O2_flux_lb, d[sp], color=colors[idx_color],
                     marker=shapes[idx_shape], s=6)
-        plt.xlabel(r'Surface $O_2$ flux [$/cm^2/s$]', fontsize=8)
+        plt.xlabel(r'Surface $O_2$ flux [pu]', fontsize=8)
         plt.ylabel(formulas[sp] + ' surface mixing ratio',fontsize=8)
         plt.xscale('log')
         plt.yscale('log')
         plt.legend(handles, labels, fontsize=6, frameon=False)
         fig.savefig('gregory_vs_this_study_' + sp + '.pdf', bbox_inches='tight')
-    
+
+    # O2 plot
+    labels_O2 =["Simulations","Gregory et. al. (2021)", "This study",
+        r"$CH_4$:$O_2$ flux ratio", "0.094", "0.3", "0.45", 
+        "Proxy constraints", "PAL", "Before GOE", "After GOE"]
+    f1 = lambda c: plt.plot([],[], linestyle='--', color=c)[0]
+    handles_O2 = handles + [make_handles("s","w", alpha=0)] +\
+        [make_handles(None, 'k', ls='--')] +\
+        [make_handles("s","#D3D3D3"),  make_handles("s","#ADD8E6")]
+    fig = plt.figure(figsize=(a4_x*0.6, a4_y*0.25))
+    plt.axhline(0.21, color='k', linestyle='--', lw=0.7, zorder=20)
+    for idx_color, data_source in enumerate(data.data_source.unique()):
+        for idx_shape, case in enumerate(cases):
+            d = data[(data.data_source == data_source) & (data.case == case)]
+            plt.scatter(d.O2_flux_lb, d['O2'], color=colors[idx_color],
+                marker=shapes[idx_shape], s=6, zorder=10)
+    plt.gca().axhspan(1e-11, 0.21e-6, color='#D3D3D3', alpha=0.5, zorder=0)
+    plt.ylim([1e-11, 2])
+    plt.gca().axhspan(0.21e-3, 0.21e-1, color='#ADD8E6', alpha=0.5, zorder=0)
+    plt.xlabel(r'Surface $O_2$ flux [pu]', fontsize=8)
+    plt.ylabel(formulas['O2'] + ' surface mixing ratio',fontsize=8)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend(handles_O2, labels_O2, fontsize=6, frameon=False)
+    fig.savefig('gregory_vs_this_study_O2_with_proxies.pdf', bbox_inches='tight')
+
     # O3 Colulm
     data_O3 = pd.read_csv('model_output/gregory_vs_this_study_O3_column.csv', compression='gzip')
     data_O3 = data_O3[data_O3.converged]
@@ -197,7 +161,7 @@ def gregory_case1_vs_this_study():
             d = data_O3[(data_O3.data_source == data_source) & (data_O3.case == case)]
             plt.scatter(d.O2_flux_lb, d['O3_column'], color=colors[idx_color],
                 marker=shapes[idx_shape], s=6)
-    plt.xlabel(r'Surface $O_2$ flux [$/cm^2/s$]', fontsize=8)
+    plt.xlabel(r'Surface $O_2$ flux [pu]', fontsize=8)
     plt.ylabel(r'$O_3$ column', fontsize=8)
     plt.xscale('log')
     plt.yscale('log')
@@ -228,7 +192,7 @@ def OH_main_sources(scenario='increase_O2'):
     scatterplot(data_int_rates, flux, 'H2O + O1D = OH + OH', 'temp_lb',
         s=2, palette="light:#cf453c")
     plt.scatter(data_360[flux], data_360['H2O + O1D = OH + OH'], s=2,
-        color=last_color("light:#cf453c"), label=r'$H_{2}O + O_1D \rightarrow 2OH$')
+        color=last_color("light:#cf453c"), label=r'$H_{2}O + O(^1D) \rightarrow 2OH$')
     r'$H_{2}O + hv \rightarrow H + OH$'
     scatterplot(data_int_rates, flux, 'H2O + HV = H + OH', 'temp_lb',
         s=2, palette="light:#516ddb")
@@ -346,6 +310,7 @@ def H2O_mixrat_vs_temp(scenario='increase_O2'):
     else:
         plt.savefig('decrease_CO_H2O_mixrat_vs_temp.pdf', bbox_inches='tight')
     plt.close('all')
+
 
 @print_name
 def mixrat_lb_vs_O2_flux_lb(scenario='increase_O2'):
@@ -843,4 +808,3 @@ if __name__ == '__main__':
     radiative_flux(scenario='decrease_CO')
     radiative_flux_rh(scenario='increase_O2')
     radiative_flux_rh(scenario='decrease_CO')
-
