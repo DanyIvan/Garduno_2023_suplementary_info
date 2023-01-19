@@ -121,7 +121,7 @@ def gregory_case1_vs_this_study():
                 d = data[(data.data_source == data_source) & (data.case == case)]
                 plt.scatter(d.O2_flux_lb, d[sp], color=colors[idx_color],
                     marker=shapes[idx_shape], s=6)
-        plt.xlabel(r'Surface $O_2$ flux [pu]', fontsize=8)
+        plt.xlabel(r'Surface $O_2$ flux [$/cm^2/s$]', fontsize=8)
         plt.ylabel(formulas[sp] + ' surface mixing ratio',fontsize=8)
         plt.xscale('log')
         plt.yscale('log')
@@ -146,7 +146,7 @@ def gregory_case1_vs_this_study():
     plt.gca().axhspan(1e-11, 0.21e-6, color='#D3D3D3', alpha=0.5, zorder=0)
     plt.ylim([1e-11, 2])
     plt.gca().axhspan(0.21e-3, 0.21e-1, color='#ADD8E6', alpha=0.5, zorder=0)
-    plt.xlabel(r'Surface $O_2$ flux [pu]', fontsize=8)
+    plt.xlabel(r'Surface $O_2$ flux [$/cm^2/s$]', fontsize=8)
     plt.ylabel(formulas['O2'] + ' surface mixing ratio',fontsize=8)
     plt.xscale('log')
     plt.yscale('log')
@@ -162,7 +162,7 @@ def gregory_case1_vs_this_study():
             d = data_O3[(data_O3.data_source == data_source) & (data_O3.case == case)]
             plt.scatter(d.O2_flux_lb, d['O3_column'], color=colors[idx_color],
                 marker=shapes[idx_shape], s=6)
-    plt.xlabel(r'Surface $O_2$ flux [pu]', fontsize=8)
+    plt.xlabel(r'Surface $O_2$ flux [$/cm^2/s$]', fontsize=8)
     plt.ylabel(r'$O_3$ column', fontsize=8)
     plt.xscale('log')
     plt.yscale('log')
@@ -708,7 +708,7 @@ def radiative_flux(scenario='increase_O2'):
                     axes[i][j].title.set_size(8)
                 axes[i][j].tick_params(axis="x",direction="in")
                 if i == 3:
-                    plt.xlabel('Wavelenght [nm]\n' +
+                    plt.xlabel('Wavelength [nm]\n' +
                         flux_labels[scenario][:-12] + ':' +
                             sci_notation(fluxes[j]) + r'$/cm^2/s$', fontsize=7)
         plt.subplots_adjust(wspace=0, hspace=0)
@@ -771,7 +771,7 @@ def radiative_flux_rh(scenario='increase_O2'):
                     axes[i][j].title.set_size(8)
                 axes[i][j].tick_params(axis="x",direction="in")
                 if i == 3:
-                    plt.xlabel('Wavelenght [nm]\n' +
+                    plt.xlabel('Wavelength [nm]\n' +
                         flux_labels[scenario][:-12] + ':' +
                             sci_notation(fluxes[j]) + r'$/cm^2/s$', fontsize=7)
         plt.subplots_adjust(wspace=0, hspace=0)
