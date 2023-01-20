@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def get_temp(temp, nz=200, dz=0.5e5):
+def get_temp(temp, nz=200, dz=0.5e5, cold_stratosphere=False):
     '''Interpolates moist adiabat temperature and pressure profiles to model
     grid'''
     #gas constant
@@ -18,10 +18,16 @@ def get_temp(temp, nz=200, dz=0.5e5):
         raise(Exception('Temperature must be one of ' + str(allowed_temps)))
     # read data
     else:
-        pressure_profile = pd.read_csv('input_data/pressure_profiles.csv', 
-            names=allowed_temps)
-        temp_profile = pd.read_csv('input_data/temperature_profiles.csv',
-            names=allowed_temps)
+        if cold_stratosphere:
+            pressure_profile = pd.read_csv('input_data/pressure_profiles_175.csv', 
+                names=allowed_temps)
+            temp_profile = pd.read_csv('input_data/temperature_profiles_175.csv',
+                names=allowed_temps)
+        else:
+            pressure_profile = pd.read_csv('input_data/pressure_profiles.csv', 
+                names=allowed_temps)
+            temp_profile = pd.read_csv('input_data/temperature_profiles.csv',
+                names=allowed_temps)
         pressure_profile = pressure_profile[temp]
         temp_profile = temp_profile[temp]
 
