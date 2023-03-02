@@ -1,4 +1,4 @@
- This repository contains the supplementary information for the paper Garduno et. al. (2022) Photochemical modeling of the climate-redox evolution of the Great Oxidation Event: from a Snowball Earth to a Hot-Moist Greenhouse. EPSL.
+ This repository contains the supplementary information for the paper Garduno et. al. (2023). Climate shapes the oxygenation of Earth's atmosphere across the Great Oxidation Event. EPSL.
 
 # Reproduce our results
 
